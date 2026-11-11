@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>军信环保·伊塞克湖(东岸)项目 | 主厂房建筑幕墙·表皮·室外景观三维数字孪生平台</title>
+  <script type="module" crossorigin src="./assets/index-CWMU4OaB.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DFwu2v5J.css">
+</head>
+<body>
+  <!-- Fullscreen WebGL Viewport -->
+  <div id="canvas-container"></div>
+
+  <!-- 3D Floating POI Labels Overlay -->
+  <div id="labels-container"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-screen">
+    <div class="loader-card">
+      <div class="loader-badge">BLENDER 5.0 × THREE.JS BIM ENGINE</div>
+      <h1>军信环保 · 伊塞克湖州垃圾科技处置(东岸)项目</h1>
+      <p>正在加载主厂房幕墙、多色RAL建筑表皮与全厂区室外景观三维模型 (2026-10-23改最终版)...</p>
+      <div class="progress-bar-wrap">
+        <div id="loading-bar" class="progress-bar-fill"></div>
+      </div>
+      <div id="loading-status" class="loader-status">初始化 WebGL 物理渲染管线...</div>
+    </div>
+  </div>
+
+  <!-- Top Engineering Header HUD -->
+  <header id="top-hud" class="glass-panel">
+    <div class="brand-block">
+      <div class="brand-tag">KYRGYZSTAN · ISSYK-KUL KARAKOL · 1650m ASL</div>
+      <div class="brand-title">伊塞克湖(东岸)项目 · 主厂房幕墙与景观三维交互系统</div>
+      <div class="brand-sub">依据 2026-10-23改【最终版】外装全套CAD(99张) &amp; 2026-10-26 景观总图 1:1 建模</div>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi-item">
+        <span class="kpi-val">8,292.5<small>㎡</small></span>
+        <span class="kpi-lbl">占地面积</span>
+      </div>
+      <div class="kpi-item">
+        <span class="kpi-val">17,912.4<small>㎡</small></span>
+        <span class="kpi-lbl">总建筑面积</span>
+      </div>
+      <div class="kpi-item">
+        <span class="kpi-val">51.45<small>m</small></span>
+        <span class="kpi-lbl">主厂房总高</span>
+      </div>
+      <div class="kpi-item">
+        <span class="kpi-val">9度<small>0.344g</small></span>
+        <span class="kpi-lbl">抗震设防</span>
+      </div>
+      <div class="kpi-item">
+        <span class="kpi-val">354<small>株</small></span>
+        <span class="kpi-lbl">CAD实测乔灌木</span>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button id="btn-walk-mode" class="action-btn" title="切换第一人称漫游 (WASD + 鼠标拖拽视角)">🚶 漫游模式</button>
+      <button id="btn-measure-mode" class="action-btn" title="点击场景任意两点测量三维空间净距与高差">📏 激光测距</button>
+      <button id="btn-toggle-labels" class="action-btn active" title="显示/隐藏中俄双语三维空间地标">🏷️ 双语地标</button>
+      <button id="btn-open-video" class="action-btn highlight" title="在线播放或下载 1080P 高清汇报漫游视频">🎬 汇报漫游视频</button>
+      <button id="btn-open-cad" class="action-btn" title="打开全套CAD设计原图高清对照抽屉">📐 CAD原图对照</button>
+    </div>
+  </header>
+
+  <!-- Mobile / Tablet Floating Drawer Toggles -->
+  <div id="mobile-fab-bar" class="mobile-fab-bar">
+    <button id="btn-mob-left" class="mob-fab">🎛️ 导览与图层</button>
+    <button id="btn-mob-right" class="mob-fab">📋 构件详情</button>
+  </div>
+
+  <!-- Left Dock: Camera Bookmarks, Layer Systems & RAL Palette -->
+  <aside id="left-dock" class="glass-panel">
+    <div class="mob-drawer-bar">
+      <span>🎛️ 视角导览 · 幕墙分层 · RAL色卡</span>
+      <button id="btn-close-left-mob" class="mini-btn">收起 ✕</button>
+    </div>
+    <div class="dock-tabs">
+      <button class="dock-tab active" data-tab="tab-views">🎥 导览视角</button>
+      <button class="dock-tab" data-tab="tab-layers">🧱 幕墙分层</button>
+      <button class="dock-tab" data-tab="tab-ral">🎨 RAL色卡</button>
+    </div>
+
+    <!-- Tab 1: 10 Camera Bookmarks -->
+    <div id="tab-views" class="tab-pane active">
+      <div class="section-caption">预设数字孪生机位 (点击平滑飞行)</div>
+      <div id="camera-list" class="camera-grid"></div>
+    </div>
+
+    <!-- Tab 2: 9 Blender Subsystem Layers + Explode + X-Ray + Section -->
+    <div id="tab-layers" class="tab-pane">
+      <div class="section-caption">构件交互分析工具</div>
+
+      <div class="control-block">
+        <div class="control-row">
+          <span>💥 幕墙表皮爆炸拆解</span>
+          <span id="explode-val" class="mono-badge">0%</span>
+        </div>
+        <input type="range" id="slider-explode" min="0" max="100" value="0" />
+      </div>
+
+      <div class="control-block">
+        <div class="toggle-line">
+          <label for="chk-xray">🔍 建筑外皮半透明透视 (检视观察窗/锅炉)</label>
+          <input type="checkbox" id="chk-xray" />
+        </div>
+        <div class="toggle-line">
+          <label for="chk-wireframe">🕸️ 叠加构件线框网格</label>
+          <input type="checkbox" id="chk-wireframe" />
+        </div>
+      </div>
+
+      <div class="control-block">
+        <div class="control-row">
+          <span>✂️ 实时三维建筑剖切</span>
+          <select id="sel-clip-axis" class="mini-select">
+            <option value="none">关闭剖切</option>
+            <option value="z_ns">1-1纵剖 (南北向推拉)</option>
+            <option value="x_ew">2-2横剖 (东西向推拉)</option>
+            <option value="y_plan">水平标高平面剖切</option>
+          </select>
+        </div>
+        <input type="range" id="slider-clip" min="0" max="100" value="50" disabled />
+        <div id="clip-readout" class="sub-hint">可沿 1-1 / 2-2 剖面实时检视内部垃圾坑与观察窗</div>
+      </div>
+
+      <div class="section-caption">Blender 9大工程图层显隐</div>
+      <div id="layer-list" class="layer-list"></div>
+    </div>
+
+    <!-- Tab 3: Calibrated RAL Design Plus Material Explorer -->
+    <div id="tab-ral" class="tab-pane">
+      <div class="section-caption">外装材料清册 (点击色卡高亮三维立面)</div>
+      <div id="ral-list" class="ral-list"></div>
+    </div>
+  </aside>
+
+  <!-- Right Dock: Raycast BIM Component Inspector & Measurement Readout -->
+  <aside id="right-dock" class="glass-panel">
+    <div class="inspector-header">
+      <span>📋 构件级 BIM 参数与图纸溯源</span>
+      <div style="display:flex;gap:6px;">
+        <button id="btn-clear-sel" class="mini-btn" title="重置高亮">重置</button>
+        <button id="btn-close-right-mob" class="mini-btn mob-only-btn">✕</button>
+      </div>
+    </div>
+
+    <div id="inspector-content" class="inspector-body">
+      <div class="empty-hint">
+        <div class="hint-icon">🖱️</div>
+        <p>在三维场景中<strong>单击任意幕墙分格、折板外框、雨篷、观察窗、高架坡道或景观建筑</strong>，即可实时调取其 CAD 图号、RAL 色号、龙骨规格与构造做法。</p>
+      </div>
+    </div>
+
+    <!-- Measurement Tool Panel (shown when Measure Mode active) -->
+    <div id="measure-panel" class="measure-box hidden">
+      <div class="measure-title">
+        <span>📏 三维激光空间测距</span>
+        <button id="btn-clear-measure" class="mini-btn">清除测点</button>
+      </div>
+      <div id="measure-output" class="measure-stats">请在模型表面依次点击起点 A 与终点 B...</div>
+    </div>
+  </aside>
+
+  <!-- Bottom Bar: Karakol Sun-Path & Lighting Time Slider + Controls Hint -->
+  <footer id="bottom-hud" class="glass-panel">
+    <div class="sun-controls">
+      <span class="sun-label">☀️ 卡拉科尔日照轨迹 (42.49°N)</span>
+      <input type="range" id="slider-time" min="6" max="22" step="0.1" value="14.5" />
+      <span id="time-readout" class="mono-badge">14:30</span>
+      <div class="time-presets">
+        <button class="preset-chip" data-hour="7.5">晨曦</button>
+        <button class="preset-chip active" data-hour="14.5">午后</button>
+        <button class="preset-chip" data-hour="18.6">金晖落日</button>
+        <button class="preset-chip" data-hour="21.0">夜景亮化</button>
+      </div>
+    </div>
+    <div id="nav-hint" class="nav-hint">
+      左键旋转 · 右键平移 · 滚轮缩放 · 单击拾取构件BIM信息
+    </div>
+  </footer>
+
+  <!-- Original CAD Sheet Interactive Comparison Modal / Drawer -->
+  <div id="cad-modal" class="cad-modal hidden">
+    <div class="cad-modal-card glass-panel">
+      <div class="cad-modal-header">
+        <div>
+          <span class="cad-badge">CAD DWG 矢量原图直出</span>
+          <strong id="cad-modal-title">2-LM-103 幕墙剖面及东北/西南三维视图</strong>
+        </div>
+        <div class="cad-modal-tools">
+          <button id="btn-cad-zoom-in" class="mini-btn">＋ 放大</button>
+          <button id="btn-cad-zoom-out" class="mini-btn">－ 缩小</button>
+          <button id="btn-cad-zoom-reset" class="mini-btn">1:1 复位</button>
+          <button id="btn-close-cad" class="action-btn">✕ 关闭对照窗</button>
+        </div>
+      </div>
+      <div class="cad-modal-body">
+        <div id="cad-sheet-tabs" class="cad-sheet-sidebar"></div>
+        <div id="cad-image-viewport" class="cad-image-viewport">
+          <img id="cad-sheet-img" src="./cad-sheets/2-LM-103.png" alt="CAD Sheet Preview" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1080P Presentation Walkthrough Video Modal -->
+  <div id="video-modal" class="cad-modal hidden">
+    <div class="cad-modal-card glass-panel video-modal-card">
+      <div class="cad-modal-header">
+        <div>
+          <span class="cad-badge">1080P H.264 汇报漫游成片</span>
+          <strong>军信环保·伊塞克湖(东岸)项目 主厂房幕墙与室外景观三维汇报漫游 (27s · 6大章节)</strong>
+        </div>
+        <div class="cad-modal-tools">
+          <a href="./videos/issyk_kul_walkthrough_1080p.mp4" download="伊塞克湖项目_主厂房幕墙与景观汇报漫游_1080P.mp4" class="action-btn highlight" style="text-decoration:none;">⬇️ 下载 MP4 视频</a>
+          <button id="btn-close-video" class="action-btn">✕ 关闭</button>
+        </div>
+      </div>
+      <div class="video-player-wrap">
+        <video id="walkthrough-player" controls playsinline webkit-playsinline preload="metadata" style="width:100%;max-height:74vh;border-radius:8px;outline:none;">
+          <source src="./videos/issyk_kul_walkthrough_1080p.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
